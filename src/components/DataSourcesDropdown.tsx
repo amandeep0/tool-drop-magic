@@ -43,65 +43,69 @@ const DataSourcesDropdown = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-8">
-      <div className="border-2 border-primary bg-card">
-        {/* Header */}
+      {/* Header Section */}
+      <div className="border-2 border-primary bg-card mb-4">
         <div
-          className="flex items-center justify-between p-4 border-b-2 border-primary cursor-pointer hover:bg-muted/20 transition-colors"
+          className="flex items-center justify-between p-5 cursor-pointer hover:bg-muted/10 transition-colors"
           onClick={() => setIsOpen(!isOpen)}
         >
           <div className="flex items-center gap-3">
             <X className="w-5 h-5" />
             <h2 className="text-lg font-bold tracking-wide">Add data sources</h2>
-            <span className="inline-flex items-center justify-center w-7 h-7 bg-primary text-primary-foreground text-sm font-bold">
+            <span className="inline-flex items-center justify-center w-7 h-7 bg-primary text-primary-foreground text-sm font-bold rounded-sm">
               {enabledCount}
             </span>
           </div>
           <ChevronUp className={`w-5 h-5 transition-transform ${isOpen ? '' : 'rotate-180'}`} />
         </div>
+      </div>
 
-        {/* Content */}
-        {isOpen && (
+      {/* Content Section */}
+      {isOpen && (
+        <div className="border-2 border-primary bg-card">
           <div className="p-6">
             {/* Search Bar */}
             <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-background border-2 border-input focus:border-primary focus:outline-none transition-colors font-mono"
+                className="w-full pl-12 pr-4 py-3 bg-background border border-border rounded-md focus:border-primary focus:outline-none transition-colors font-mono text-muted-foreground"
               />
             </div>
 
             {/* Data Sources List */}
-            <div className="space-y-0 border-2 border-primary">
-              {filteredSources.map((source, index) => (
-                <div
-                  key={source.id}
-                  className={`flex items-center justify-between p-4 hover:bg-muted/10 transition-colors ${
-                    index !== filteredSources.length - 1 ? 'border-b border-border' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <DataSourceIcon type={source.iconType} className="w-5 h-5 text-primary" />
-                    <span className="font-mono tracking-wide">{source.name}</span>
-                  </div>
+            <div className="max-h-[500px] overflow-y-auto pr-2">
+              <div className="space-y-0">
+                {filteredSources.map((source, index) => (
+                  <div
+                    key={source.id}
+                    className={`flex items-center justify-between py-5 px-2 hover:bg-muted/5 transition-colors ${
+                      index !== filteredSources.length - 1 ? 'border-b border-border' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <DataSourceIcon type={source.iconType} className="w-5 h-5 text-primary" />
+                      <span className="font-mono tracking-wide text-foreground">{source.name}</span>
+                    </div>
 
-                  {source.isPro ? (
-                    <ProBadge />
-                  ) : (
-                    <SophisticatedToggle
-                      defaultChecked={source.enabled}
-                      onChange={(checked) => handleToggle(source.id, checked)}
-                    />
-                  )}
-                </div>
-              ))}
+                    {source.isPro ? (
+                      <ProBadge />
+                    ) : (
+                      <SophisticatedToggle
+                        defaultChecked={source.enabled}
+                        onChange={(checked) => handleToggle(source.id, checked)}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
