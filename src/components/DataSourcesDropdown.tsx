@@ -73,14 +73,6 @@ const DataSourcesDropdown = () => {
             toggleSource(focusedSource.id);
           }
         }
-        // Move to next item after toggling
-        if (e.key === 'Tab' && !e.shiftKey) {
-          setFocusedIndex((prev) => 
-            prev < filteredSources.length - 1 ? prev + 1 : prev
-          );
-        } else if (e.key === 'Tab' && e.shiftKey) {
-          setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-        }
         break;
       case 'Escape':
         e.preventDefault();
