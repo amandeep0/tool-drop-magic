@@ -13,7 +13,7 @@ export const DataSourceItem = ({ source, isSelected, onToggle, isFocused }: Data
   return (
     <div 
       className={`flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border last:border-b-0 ${
-        isFocused ? 'bg-accent/10 ring-2 ring-inset ring-accent' : ''
+        isFocused ? 'bg-primary/10 ring-2 ring-inset ring-primary' : ''
       }`}
       data-source-id={source.id}
     >

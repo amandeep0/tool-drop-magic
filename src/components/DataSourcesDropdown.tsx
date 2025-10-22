@@ -65,6 +65,7 @@ const DataSourcesDropdown = () => {
         setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
         break;
       case 'Enter':
+      case 'Tab':
         e.preventDefault();
         if (focusedIndex >= 0 && focusedIndex < filteredSources.length) {
           const focusedSource = filteredSources[focusedIndex];
@@ -72,14 +73,13 @@ const DataSourcesDropdown = () => {
             toggleSource(focusedSource.id);
           }
         }
-        break;
-      case 'Tab':
-        if (!e.shiftKey && focusedIndex < filteredSources.length - 1) {
-          e.preventDefault();
-          setFocusedIndex((prev) => prev + 1);
-        } else if (e.shiftKey && focusedIndex > 0) {
-          e.preventDefault();
-          setFocusedIndex((prev) => prev - 1);
+        // Move to next item after toggling
+        if (e.key === 'Tab' && !e.shiftKey) {
+          setFocusedIndex((prev) => 
+            prev < filteredSources.length - 1 ? prev + 1 : prev
+          );
+        } else if (e.key === 'Tab' && e.shiftKey) {
+          setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
         }
         break;
       case 'Escape':
