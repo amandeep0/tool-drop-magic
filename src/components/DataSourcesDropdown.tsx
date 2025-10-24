@@ -1,18 +1,19 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Search, ChevronDown } from "lucide-react";
+import { X, Search, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataSourceItem } from "./DataSourceItem";
-import { dataSourcesSections } from "@/config/dataSources";
+import { dataSourcesSections, DataSourceSection } from "@/config/dataSources";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const DataSourcesDropdown = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const [selectedSection, setSelectedSection] = useState<DataSourceSection | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSources, setSelectedSources] = useState<string[]>([
     "equity-eod",
@@ -25,19 +26,18 @@ const DataSourcesDropdown = () => {
   ]);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const sideSearchInputRef = useRef<HTMLInputElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
 
-  const filteredSections = dataSourcesSections
-    .map((section) => ({
-      ...section,
-      sources: section.sources.filter((source) =>
-        source.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        section.title.toLowerCase().includes(searchQuery.toLowerCase())
-      ),
-    }))
-    .filter((section) => section.sources.length > 0);
+  const filteredSections = dataSourcesSections.filter((section) =>
+    section.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const allFilteredSources = filteredSections.flatMap((section) => section.sources);
+  const sideFilteredSources = selectedSection
+    ? selectedSection.sources.filter((source) =>
+        source.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   const toggleSource = (id: string) => {
     setSelectedSources((prev) =>
@@ -52,26 +52,26 @@ const DataSourcesDropdown = () => {
     setFocusedIndex(-1);
   }, [searchQuery]);
 
-  // Scroll focused item into view
+  // Scroll focused item into view in side panel
   useEffect(() => {
-    if (focusedIndex >= 0 && listContainerRef.current) {
+    if (focusedIndex >= 0 && listContainerRef.current && selectedSection) {
       const focusedElement = listContainerRef.current.querySelector(
-        `[data-source-id="${allFilteredSources[focusedIndex]?.id}"]`
+        `[data-source-id="${sideFilteredSources[focusedIndex]?.id}"]`
       );
       if (focusedElement) {
         focusedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     }
-  }, [focusedIndex, allFilteredSources]);
+  }, [focusedIndex, sideFilteredSources, selectedSection]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!allFilteredSources.length) return;
+    if (!sideFilteredSources.length) return;
 
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
         setFocusedIndex((prev) => 
-          prev < allFilteredSources.length - 1 ? prev + 1 : prev
+          prev < sideFilteredSources.length - 1 ? prev + 1 : prev
         );
         break;
       case 'ArrowUp':
@@ -81,8 +81,8 @@ const DataSourcesDropdown = () => {
       case 'Enter':
       case 'Tab':
         e.preventDefault();
-        if (focusedIndex >= 0 && focusedIndex < allFilteredSources.length) {
-          const focusedSource = allFilteredSources[focusedIndex];
+        if (focusedIndex >= 0 && focusedIndex < sideFilteredSources.length) {
+          const focusedSource = sideFilteredSources[focusedIndex];
           if (!focusedSource.isPro) {
             toggleSource(focusedSource.id);
           }
@@ -91,7 +91,7 @@ const DataSourcesDropdown = () => {
       case 'Escape':
         e.preventDefault();
         setFocusedIndex(-1);
-        searchInputRef.current?.blur();
+        sideSearchInputRef.current?.blur();
         break;
     }
   };
@@ -125,48 +125,67 @@ const DataSourcesDropdown = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   ref={searchInputRef}
-                  placeholder="Search"
+                  placeholder="Search sections"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-10 bg-background border-border font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="max-h-[500px] overflow-y-auto">
+              {filteredSections.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => setSelectedSection(section)}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border last:border-b-0 text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm font-semibold">{section.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {section.sources.filter(s => selectedSources.includes(s.id)).length}/{section.sources.length}
+                    </span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <Sheet open={!!selectedSection} onOpenChange={(open) => !open && setSelectedSection(null)}>
+          <SheetContent side="right" className="w-full sm:w-[540px] sm:max-w-[540px]">
+            <SheetHeader>
+              <SheetTitle className="font-mono">{selectedSection?.title}</SheetTitle>
+            </SheetHeader>
+            
+            <div className="mt-4 space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  ref={sideSearchInputRef}
+                  placeholder="Search data sources"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   className="pl-10 h-10 bg-background border-border font-mono"
                 />
               </div>
-            </div>
 
-            <div ref={listContainerRef} className="max-h-[500px] overflow-y-auto">
-              <Accordion type="multiple" defaultValue={filteredSections.map(s => s.id)} className="w-full">
-                {filteredSections.map((section) => {
-                  const sectionStartIndex = allFilteredSources.findIndex(
-                    (source) => section.sources[0]?.id === source.id
-                  );
-                  
-                  return (
-                    <AccordionItem key={section.id} value={section.id} className="border-b-0">
-                      <AccordionTrigger className="px-4 py-3 hover:bg-muted/50 border-b border-border hover:no-underline">
-                        <span className="font-mono text-sm font-semibold">{section.title}</span>
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-0">
-                        {section.sources.map((source, index) => {
-                          const globalIndex = sectionStartIndex + index;
-                          return (
-                            <DataSourceItem
-                              key={source.id}
-                              source={source}
-                              isSelected={selectedSources.includes(source.id)}
-                              onToggle={() => toggleSource(source.id)}
-                              isFocused={globalIndex === focusedIndex}
-                            />
-                          );
-                        })}
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
+              <div ref={listContainerRef} className="max-h-[calc(100vh-200px)] overflow-y-auto">
+                {sideFilteredSources.map((source, index) => (
+                  <DataSourceItem
+                    key={source.id}
+                    source={source}
+                    isSelected={selectedSources.includes(source.id)}
+                    onToggle={() => toggleSource(source.id)}
+                    isFocused={index === focusedIndex}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );
