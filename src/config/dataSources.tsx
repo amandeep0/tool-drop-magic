@@ -7,52 +7,94 @@ export interface DataSourceConfig {
   isPro?: boolean;
 }
 
-export const dataSourcesConfig: DataSourceConfig[] = [
+export interface DataSourceSection {
+  id: string;
+  title: string;
+  sources: DataSourceConfig[];
+}
+
+export const dataSourcesSections: DataSourceSection[] = [
   {
-    id: "equity-eod",
-    name: "Equity Data (EOD)",
-    icon: <DataSourceIcon type="equity" className="w-5 h-5" />,
+    id: "equity",
+    title: "Equity",
+    sources: [
+      {
+        id: "equity-eod",
+        name: "End of Day Data",
+        icon: <DataSourceIcon type="equity" className="w-5 h-5" />,
+      },
+      {
+        id: "equity-1min",
+        name: "1-Minute Level Data",
+        icon: <DataSourceIcon type="minute-equity" className="w-5 h-5" />,
+        isPro: true,
+      },
+    ],
   },
   {
-    id: "options-eod",
-    name: "Options Data (EOD)",
-    icon: <DataSourceIcon type="options" className="w-5 h-5" />,
+    id: "options",
+    title: "Options",
+    sources: [
+      {
+        id: "options-eod",
+        name: "End of Day Data",
+        icon: <DataSourceIcon type="options" className="w-5 h-5" />,
+      },
+      {
+        id: "options-1min",
+        name: "1-Minute Level Data",
+        icon: <DataSourceIcon type="minute-options" className="w-5 h-5" />,
+        isPro: true,
+      },
+    ],
   },
   {
-    id: "futures-eod",
-    name: "Futures Data (EOD)",
-    icon: <DataSourceIcon type="futures" className="w-5 h-5" />,
+    id: "futures",
+    title: "Futures",
+    sources: [
+      {
+        id: "futures-eod",
+        name: "End of Day Data",
+        icon: <DataSourceIcon type="futures" className="w-5 h-5" />,
+      },
+    ],
   },
   {
-    id: "crypto-eod",
-    name: "Crypto Data (EOD)",
-    icon: <DataSourceIcon type="crypto" className="w-5 h-5" />,
+    id: "crypto",
+    title: "Crypto",
+    sources: [
+      {
+        id: "crypto-eod",
+        name: "End of Day Data",
+        icon: <DataSourceIcon type="crypto" className="w-5 h-5" />,
+      },
+    ],
   },
   {
-    id: "web-search",
-    name: "Web Search",
-    icon: <DataSourceIcon type="search" className="w-5 h-5" />,
+    id: "fundamental",
+    title: "Fundamental Data",
+    sources: [
+      {
+        id: "fundamental-scalar",
+        name: "Scalar Research",
+        icon: <DataSourceIcon type="fundamental" className="w-5 h-5" />,
+      },
+      {
+        id: "congress-trades",
+        name: "Congress Trades",
+        icon: <DataSourceIcon type="congress" className="w-5 h-5" />,
+      },
+    ],
   },
   {
-    id: "fundamental-scalar",
-    name: "Fundamental Data (Scalar Research)",
-    icon: <DataSourceIcon type="fundamental" className="w-5 h-5" />,
-  },
-  {
-    id: "congress-trades",
-    name: "Congress Trades",
-    icon: <DataSourceIcon type="congress" className="w-5 h-5" />,
-  },
-  {
-    id: "equity-1min",
-    name: "Equity Data (1-Minute Level)",
-    icon: <DataSourceIcon type="minute-equity" className="w-5 h-5" />,
-    isPro: true,
-  },
-  {
-    id: "options-1min",
-    name: "Options Data (1-Minute Level)",
-    icon: <DataSourceIcon type="minute-options" className="w-5 h-5" />,
-    isPro: true,
+    id: "other",
+    title: "Other",
+    sources: [
+      {
+        id: "web-search",
+        name: "Web Search",
+        icon: <DataSourceIcon type="search" className="w-5 h-5" />,
+      },
+    ],
   },
 ];

@@ -3,7 +3,13 @@ import { X, Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataSourceItem } from "./DataSourceItem";
-import { dataSourcesConfig } from "@/config/dataSources";
+import { dataSourcesSections } from "@/config/dataSources";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const DataSourcesDropdown = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -21,9 +27,17 @@ const DataSourcesDropdown = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
 
-  const filteredSources = dataSourcesConfig.filter((source) =>
-    source.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredSections = dataSourcesSections
+    .map((section) => ({
+      ...section,
+      sources: section.sources.filter((source) =>
+        source.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        section.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    }))
+    .filter((section) => section.sources.length > 0);
+
+  const allFilteredSources = filteredSections.flatMap((section) => section.sources);
 
   const toggleSource = (id: string) => {
     setSelectedSources((prev) =>
@@ -42,22 +56,22 @@ const DataSourcesDropdown = () => {
   useEffect(() => {
     if (focusedIndex >= 0 && listContainerRef.current) {
       const focusedElement = listContainerRef.current.querySelector(
-        `[data-source-id="${filteredSources[focusedIndex]?.id}"]`
+        `[data-source-id="${allFilteredSources[focusedIndex]?.id}"]`
       );
       if (focusedElement) {
         focusedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     }
-  }, [focusedIndex, filteredSources]);
+  }, [focusedIndex, allFilteredSources]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!filteredSources.length) return;
+    if (!allFilteredSources.length) return;
 
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
         setFocusedIndex((prev) => 
-          prev < filteredSources.length - 1 ? prev + 1 : prev
+          prev < allFilteredSources.length - 1 ? prev + 1 : prev
         );
         break;
       case 'ArrowUp':
@@ -67,8 +81,8 @@ const DataSourcesDropdown = () => {
       case 'Enter':
       case 'Tab':
         e.preventDefault();
-        if (focusedIndex >= 0 && focusedIndex < filteredSources.length) {
-          const focusedSource = filteredSources[focusedIndex];
+        if (focusedIndex >= 0 && focusedIndex < allFilteredSources.length) {
+          const focusedSource = allFilteredSources[focusedIndex];
           if (!focusedSource.isPro) {
             toggleSource(focusedSource.id);
           }
@@ -121,15 +135,35 @@ const DataSourcesDropdown = () => {
             </div>
 
             <div ref={listContainerRef} className="max-h-[500px] overflow-y-auto">
-              {filteredSources.map((source, index) => (
-                <DataSourceItem
-                  key={source.id}
-                  source={source}
-                  isSelected={selectedSources.includes(source.id)}
-                  onToggle={() => toggleSource(source.id)}
-                  isFocused={index === focusedIndex}
-                />
-              ))}
+              <Accordion type="multiple" defaultValue={filteredSections.map(s => s.id)} className="w-full">
+                {filteredSections.map((section) => {
+                  const sectionStartIndex = allFilteredSources.findIndex(
+                    (source) => section.sources[0]?.id === source.id
+                  );
+                  
+                  return (
+                    <AccordionItem key={section.id} value={section.id} className="border-b-0">
+                      <AccordionTrigger className="px-4 py-3 hover:bg-muted/50 border-b border-border hover:no-underline">
+                        <span className="font-mono text-sm font-semibold">{section.title}</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-0">
+                        {section.sources.map((source, index) => {
+                          const globalIndex = sectionStartIndex + index;
+                          return (
+                            <DataSourceItem
+                              key={source.id}
+                              source={source}
+                              isSelected={selectedSources.includes(source.id)}
+                              onToggle={() => toggleSource(source.id)}
+                              isFocused={globalIndex === focusedIndex}
+                            />
+                          );
+                        })}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             </div>
           </div>
         )}
