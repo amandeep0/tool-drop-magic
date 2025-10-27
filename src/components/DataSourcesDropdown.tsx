@@ -19,9 +19,11 @@ const DataSourcesDropdown = () => {
     "congress-trades",
   ]);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [focusedSectionIndex, setFocusedSectionIndex] = useState(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const sideSearchInputRef = useRef<HTMLInputElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
+  const sectionsContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredSections = dataSourcesSections.filter((section) =>
     section.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -44,6 +46,7 @@ const DataSourcesDropdown = () => {
   // Reset focused index when search query changes
   useEffect(() => {
     setFocusedIndex(-1);
+    setFocusedSectionIndex(-1);
   }, [searchQuery]);
 
   // Scroll focused item into view in side panel
@@ -58,7 +61,48 @@ const DataSourcesDropdown = () => {
     }
   }, [focusedIndex, sideFilteredSources, selectedSection]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // Scroll focused section into view
+  useEffect(() => {
+    if (focusedSectionIndex >= 0 && sectionsContainerRef.current) {
+      const focusedElement = sectionsContainerRef.current.querySelector(
+        `[data-section-id="${filteredSections[focusedSectionIndex]?.id}"]`
+      );
+      if (focusedElement) {
+        focusedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [focusedSectionIndex, filteredSections]);
+
+  const handleMainKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!filteredSections.length) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setFocusedSectionIndex((prev) => 
+          prev < filteredSections.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setFocusedSectionIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (focusedSectionIndex >= 0 && focusedSectionIndex < filteredSections.length) {
+          setSelectedSection(filteredSections[focusedSectionIndex]);
+          setFocusedSectionIndex(-1);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setFocusedSectionIndex(-1);
+        searchInputRef.current?.blur();
+        break;
+    }
+  };
+
+  const handleSideKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!sideFilteredSources.length) return;
 
     switch (e.key) {
@@ -85,7 +129,7 @@ const DataSourcesDropdown = () => {
       case 'Escape':
         e.preventDefault();
         setFocusedIndex(-1);
-        sideSearchInputRef.current?.blur();
+        setSelectedSection(null);
         break;
     }
   };
@@ -122,17 +166,21 @@ const DataSourcesDropdown = () => {
                   placeholder="Search sections"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleMainKeyDown}
                   className="pl-10 h-10 bg-background border-border font-mono"
                 />
               </div>
             </div>
 
-            <div className="max-h-[500px] overflow-y-auto">
-              {filteredSections.map((section) => (
+            <div ref={sectionsContainerRef} className="max-h-[500px] overflow-y-auto">
+              {filteredSections.map((section, index) => (
                 <button
                   key={section.id}
+                  data-section-id={section.id}
                   onClick={() => setSelectedSection(section)}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border last:border-b-0 text-left"
+                  className={`w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border last:border-b-0 text-left ${
+                    index === focusedSectionIndex ? 'bg-primary/10 ring-2 ring-inset ring-primary' : ''
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-sm font-semibold">{section.title}</span>
@@ -158,7 +206,7 @@ const DataSourcesDropdown = () => {
                   placeholder="Search data sources"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
+                  onKeyDown={handleSideKeyDown}
                   className="pl-10 h-10 bg-background border-border font-mono"
                 />
               </div>
