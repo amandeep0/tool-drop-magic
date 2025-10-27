@@ -20,8 +20,8 @@ const DataSourcesDropdown = () => {
   ]);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [focusedSectionIndex, setFocusedSectionIndex] = useState(-1);
+  const [sideDropdownTop, setSideDropdownTop] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const sideSearchInputRef = useRef<HTMLInputElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
   const sectionsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -29,11 +29,7 @@ const DataSourcesDropdown = () => {
     section.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const sideFilteredSources = selectedSection
-    ? selectedSection.sources.filter((source) =>
-        source.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
+  const sideDisplayedSources = selectedSection ? selectedSection.sources : [];
 
   const toggleSource = (id: string) => {
     setSelectedSources((prev) =>
@@ -53,13 +49,13 @@ const DataSourcesDropdown = () => {
   useEffect(() => {
     if (focusedIndex >= 0 && listContainerRef.current && selectedSection) {
       const focusedElement = listContainerRef.current.querySelector(
-        `[data-source-id="${sideFilteredSources[focusedIndex]?.id}"]`
+        `[data-source-id="${sideDisplayedSources[focusedIndex]?.id}"]`
       );
       if (focusedElement) {
         focusedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     }
-  }, [focusedIndex, sideFilteredSources, selectedSection]);
+  }, [focusedIndex, sideDisplayedSources, selectedSection]);
 
   // Scroll focused section into view
   useEffect(() => {
@@ -102,37 +98,6 @@ const DataSourcesDropdown = () => {
     }
   };
 
-  const handleSideKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!sideFilteredSources.length) return;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setFocusedIndex((prev) => 
-          prev < sideFilteredSources.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-        break;
-      case 'Enter':
-      case 'Tab':
-        e.preventDefault();
-        if (focusedIndex >= 0 && focusedIndex < sideFilteredSources.length) {
-          const focusedSource = sideFilteredSources[focusedIndex];
-          if (!focusedSource.isPro) {
-            toggleSource(focusedSource.id);
-          }
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setFocusedIndex(-1);
-        setSelectedSection(null);
-        break;
-    }
-  };
 
   return (
     <div className="w-full max-w-4xl mx-auto p-8">
@@ -177,7 +142,14 @@ const DataSourcesDropdown = () => {
                 <button
                   key={section.id}
                   data-section-id={section.id}
-                  onClick={() => setSelectedSection(section)}
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const containerRect = sectionsContainerRef.current?.getBoundingClientRect();
+                    if (containerRect) {
+                      setSideDropdownTop(rect.top - containerRect.top);
+                    }
+                    setSelectedSection(section);
+                  }}
                   className={`w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border last:border-b-0 text-left ${
                     index === focusedSectionIndex ? 'bg-primary/10 ring-2 ring-inset ring-primary' : ''
                   }`}
@@ -196,24 +168,16 @@ const DataSourcesDropdown = () => {
         )}
 
         {selectedSection && (
-          <div className="absolute left-full top-0 ml-2 w-[500px] bg-card border-2 border-primary rounded-lg shadow-[0_8px_16px_rgba(0,0,0,0.15)] z-50 overflow-hidden">
+          <div 
+            className="absolute left-full ml-2 w-[500px] bg-card border-2 border-primary rounded-lg shadow-[0_8px_16px_rgba(0,0,0,0.15)] z-50 overflow-hidden"
+            style={{ top: `${sideDropdownTop}px` }}
+          >
             <div className="p-4 border-b border-border">
-              <h3 className="font-mono font-semibold mb-3">{selectedSection.title}</h3>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  ref={sideSearchInputRef}
-                  placeholder="Search data sources"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleSideKeyDown}
-                  className="pl-10 h-10 bg-background border-border font-mono"
-                />
-              </div>
+              <h3 className="font-mono font-semibold">{selectedSection.title}</h3>
             </div>
 
             <div ref={listContainerRef} className="max-h-[500px] overflow-y-auto">
-              {sideFilteredSources.map((source, index) => (
+              {sideDisplayedSources.map((source, index) => (
                 <DataSourceItem
                   key={source.id}
                   source={source}
