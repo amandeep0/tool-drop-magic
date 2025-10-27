@@ -4,12 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataSourceItem } from "./DataSourceItem";
 import { dataSourcesSections, DataSourceSection } from "@/config/dataSources";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 
 const DataSourcesDropdown = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -153,13 +147,10 @@ const DataSourcesDropdown = () => {
           </div>
         )}
 
-        <Sheet open={!!selectedSection} onOpenChange={(open) => !open && setSelectedSection(null)}>
-          <SheetContent side="right" className="w-full sm:w-[540px] sm:max-w-[540px]">
-            <SheetHeader>
-              <SheetTitle className="font-mono">{selectedSection?.title}</SheetTitle>
-            </SheetHeader>
-            
-            <div className="mt-4 space-y-4">
+        {selectedSection && (
+          <div className="absolute left-full top-0 ml-2 w-[500px] bg-card border-2 border-primary rounded-lg shadow-[0_8px_16px_rgba(0,0,0,0.15)] z-50 overflow-hidden">
+            <div className="p-4 border-b border-border">
+              <h3 className="font-mono font-semibold mb-3">{selectedSection.title}</h3>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -171,21 +162,21 @@ const DataSourcesDropdown = () => {
                   className="pl-10 h-10 bg-background border-border font-mono"
                 />
               </div>
-
-              <div ref={listContainerRef} className="max-h-[calc(100vh-200px)] overflow-y-auto">
-                {sideFilteredSources.map((source, index) => (
-                  <DataSourceItem
-                    key={source.id}
-                    source={source}
-                    isSelected={selectedSources.includes(source.id)}
-                    onToggle={() => toggleSource(source.id)}
-                    isFocused={index === focusedIndex}
-                  />
-                ))}
-              </div>
             </div>
-          </SheetContent>
-        </Sheet>
+
+            <div ref={listContainerRef} className="max-h-[500px] overflow-y-auto">
+              {sideFilteredSources.map((source, index) => (
+                <DataSourceItem
+                  key={source.id}
+                  source={source}
+                  isSelected={selectedSources.includes(source.id)}
+                  onToggle={() => toggleSource(source.id)}
+                  isFocused={index === focusedIndex}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
